@@ -1,0 +1,84 @@
+---
+title: "414HW2"
+author: "Ningyuan Wang"
+date: "9/18/2020"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/Desktop/STATS414")
+```
+
+### 1.
+
+```{r, results="hide" }
+# generate observations
+library(MASS)
+mu <- c(3,4)
+sigma <- matrix(c(1.0,0.8,0.8,1.0),nrow=2)
+set.seed(123)
+datam <- data.frame(mvrnorm(100,mu,sigma))
+colnames(datam) <- c("x","y")
+```
+
+a. The scatter plot is in part b. To save the space, we only show the code here. 
+```{r}
+plot(datam$x, datam$y, xlim = c(0,7), ylim = c(0,7))
+```
+
+
+b. The values for alpha_hat is 1.6969772, beta_hat is 0.7547914, sigma_hat is 0.5701, and r_squared is 0.6063.
+```{r}
+lm = lm(y~x, data = datam)
+lm$coefficients
+summary(lm)$sigma
+summary(lm)$r.squared
+plot(datam$x, datam$y, xlim = c(0,7), ylim = c(0,7))+ abline(lm)
+```
+
+
+c. 
+The value of F-statistic is 150.91, and p-value is < 2.2e-16. Because p-value < alpha(=0.05), reject H_0. 
+```{r}
+# reduced model
+lm0 = lm(y~1, datam)
+# compare two models
+anova(lm0, lm)
+```
+
+d.
+The value of F-statistic is 5.5854, and p-value is 0.02008. Because p-value < alpha(=0.05), reject H_0. 
+```{r}
+lm1 = lm(y~offset(0.9*x), datam)
+anova(lm1, lm)
+```
+
+
+### 2.
+```{r, result = "hide"}
+m0 <- lm(y ~ x -1 , data=datam)
+summary(m0)
+```
+
+a.
+```{r}
+plot(datam$x, datam$y, xlim = c(0,7), ylim = c(0,7))+ abline(m0, lty=2)
+```
+
+b. 
+No. The sum of residuals for the model without an intercept is 13.79104.
+```{r}
+sum(residuals(m0))
+```
+
+c. Hand-writtten part was attached below.
+```{r}
+sum(datam$x * residuals(m0))
+sum(fitted.values(m0) * residuals(m0))
+# cor(datam) # correlation coeeficeint r
+# anova(lm) # anova table for the model
+```
+
