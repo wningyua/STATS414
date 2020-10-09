@@ -1,0 +1,103 @@
+---
+title: "414HW3"
+author: "Ningyuan Wang"
+date: "9/25/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1.
+```{r,results="hide"}
+library(MASS)
+mu <- c(3,4)
+sigma <- matrix(c(1.0,0.8,0.8,1.0),nrow=2)
+set.seed(123)
+datam <- data.frame(mvrnorm(100,mu,sigma))
+colnames(datam) <- c("x","y")
+```
+a.
+In the following plot, the solid line represents the linear model with y as the response and x as the predictor. The dashed line represents the linear model reversing the roles of x and y. 
+```{r}
+lm = lm(y~x, data = datam)
+lm_rev = lm(x~y, data = datam)
+# summary(lm_rev)
+newy = seq(-1, 8, length = 50)
+newx = coef(lm_rev)[1] + coef(lm_rev)[2]*newy
+plot(datam$x, datam$y, xlim = c(0,7), ylim = c(0,7))+ abline(lm) 
+lines(newx, newy, lty = 2)
+```
+
+b.
+The R_squared, T-stats associated with the predicotors and their respective p-values, F-stats and p-values from the two models are the same. 
+```{r}
+# r_squared
+summary(lm)$r.squared
+summary(lm_rev)$r.squared
+# t-stats
+summary(lm)$coefficients
+summary(lm_rev)$coefficients
+
+# f-stats
+summary(lm)$fstatistic
+summary(lm_rev)$fstatistic
+# summary(lm)
+# summary(lm_rev)
+```
+
+c.
+Please check the hand-written part below.
+
+### 2.
+a.
+```{r}
+dat = read.csv("college.csv")
+pairs(dat[, c("gradrat", "csat", "stufac", "rmbrd", "act")])
+lm_dat = lm(gradrat ~ csat + private + stufac  + rmbrd + act, data = dat)
+# summary(lm_dat)
+```
+b.
+F-stat is 1.1251 and p-value is 0.342. Since p-value >0.05, do not reject H0.
+```{r}
+lm_t1 = lm(gradrat ~ csat + act, data = dat)
+anova(lm_t1, lm_dat)
+```
+
+c.
+F-stat is 0.6348 and p-value is 0.4272 Since p-value >0.05, do not reject H0.
+```{r}
+lm_t2 = lm(gradrat ~ offset(0.05*csat) + private + stufac  + rmbrd + act, data = dat)
+anova(lm_t2, lm_dat)
+```
+
+d.
+F-stat is 44.565 and p-value is close to 0. Since p-value <0.05, reject H0.
+```{r}
+lm_t3 = lm(gradrat ~ csat + private + stufac, data = dat)
+anova(lm_t3, lm_dat)
+```
+
+e.
+F-stat is 7.8216 and p-value is 0.006. Since p-value <0.05, reject H0.
+```{r}
+lm_t4 = lm(gradrat ~ csat + private + stufac  + I(rmbrd + act), data = dat)
+anova(lm_t4, lm_dat)
+```
+
+### 3.
+beta0_hat is 1, beta1_hat is -0.5, beta2_hat is 0.5. The estimates for beta0_hat and beta1_hat remain unchanged if beta2 is 0. 
+```{r}
+dat3 = matrix(c(1,0,-1,1,0,2), ncol = 2)
+dat3 = as.data.frame(dat3)
+colnames(dat3) = c("x", "y")
+
+lm3 = lm(y~x + I(3*x^2 -2),  data = dat3)
+lm3$coefficients
+lm4 = lm(y~x, data = dat3)
+lm4$coefficients
+
+```
+
+### 4. Please see the hand-written part below. 
