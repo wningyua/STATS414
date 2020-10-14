@@ -1,0 +1,80 @@
+---
+title: "414HW4"
+author: "Ningyuan Wang"
+date: "10/6/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+a. 
+The histogram of the log relative risk was shown below, and the estimated standard error is 0.1236. 95% CI for the RR is (1.4268, 2.3160)
+
+```{r}
+set.seed(456)
+dat = c(189, 104, 10845, 10933)
+myoasp = matrix(dat, nrow = 2, ncol = 2)
+colnames(myoasp) = c("Yes", "No")
+rownames(myoasp) = c("Placebo", "Aspirin")
+simdat = rmultinom(1000, size = 22071,
+                   prob = c(189, 104, 10845, 10933)/22071)
+logthfun = function(thta){
+  log((thta[1]/(thta[1]+thta[3])) / (thta[2]/(thta[2]+thta[4])))}
+logrr = apply(simdat, 2, logthfun)
+hist(logrr, col="lightblue", breaks = 15, main = "")
+round(sd(logrr), 4)
+# 95% CI
+dat_log = log((189/(189+10845)) / (104/(104+10933)))#0.6071993
+exp(dat_log - 1.96*sd(logrr))
+exp(dat_log + 1.96*sd(logrr))
+```
+
+b.
+The estimated standard error is 0.1213, which is close to the result in part a
+```{r}
+pihat = cbind(c(189, 10845, 104, 10933)/22071)
+sigma = diag(c(pihat)) - pihat %*% t(pihat)
+temp = c(-1/(pihat[1] + pihat[2]), 1/(pihat[3] + pihat[4]))
+B = rbind(c(temp[1]+(1/pihat[1]), temp[1], temp[2]-(1/pihat[3]), temp[2]))
+sqrt(B %*% sigma %*% t(B)/22071)
+```
+
+
+## 2
+a.
+The histogram of the odds ratio is shown below, and the standard error of the sample is 2.4569.
+
+b. 
+The standard error of the log odds ratio samples is 0.4893. The log odds ratio follows a normal distribution. The log odds ratio is 1.3218 (please check the hand-written part below) and 95% CI of theta is (1.4391, 9.7726)
+
+c.
+The estimated standard error of log odds ratio calculated by hand is 0.4726, and the 95% CI is (1.4815, 9.4697), which is pretty close to the result in part b. Please check the hand-written part below. The small difference is probably because of the sample size.
+```{r}
+set.seed(456)
+dat2 = c(30, 10, 20, 25)
+myoasp2 = matrix(dat2, nrow = 2, ncol = 2)
+colnames(myoasp2) = c("Yes", "No")
+rownames(myoasp2) = c("Yes", "No")
+simdat2 = rmultinom(1000, size = 85,
+                   prob = c(30, 20, 10, 25)/85) # row-based
+fun = function(thta){
+  (thta[1] * thta[4])/ (thta[2]* thta[3])}
+funtheta = apply(simdat2, 2, fun)
+hist(funtheta, col="lightblue", breaks = 15, main = "")
+round(sd(funtheta), 4)
+#b.
+logfun = function(thta){
+  log((thta[1] * thta[4])/ (thta[2]*(thta[3])))}
+logfuntheta = apply(simdat2, 2, logfun)
+hist(logfuntheta, col="green", breaks = 15, main = "")
+round(sd(logfuntheta), 4)
+
+dat_log2 = 1.3218
+exp(dat_log2 - 1.96*sd(logfuntheta))
+exp(dat_log2 + 1.96*sd(logfuntheta))
+
+```
+
