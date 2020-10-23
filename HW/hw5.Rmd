@@ -1,0 +1,54 @@
+---
+title: "HW5"
+author: "Ningyuan Wang"
+date: "10/16/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1
+a.
+With LRT, the test statistic is 12.845, and the p-value is 0.0016. Since p-value < .05, reject the null hypothesis. With Wald test, the test statistic is 12.4, and the p-value is 0.0021. Similar to the LRT, we also reject the null hypothesis at alpha = 0.05. 
+
+b.
+With LRT, the test statistic is 0.96205, and the p-value is 0.3267 Since p-value > .05, do not reject the null hypothesis. With Wald test, the test statistic is 0.95, and the p-value is 0.33 Similar to the LRT, we also do not reject the null hypothesis at alpha = 0.05. 
+
+c. 
+With the covariance matrix of the model, we know that Var(beta_race2) = 0.2054273885, Var(beta_race3) = 0.2412413604, and Cov(beta_race2, beta_race3) = 0.0945459565. Also, based on the model, beta_race2 = 0.91630, and beta_race3 = 0.42271. Se(beta_race2 - beta_race3) = sqrt(Var(beta_race2 - beta_race3)) = 0.5075203. So the 95% confidence interval is (-0.501  1.488). Since the CI includes 0, we do not reject null hypothesis. There is no significant difference in the odds of death comparing black and the other race, while fixed other variables. 
+
+d. The residual deviance cannot be used as a goodness of fit statistic, becauase the model has a binary response that we cannot find a saturated model for comparing and constructing a chi-squared distribution. 
+
+```{r}
+icu = read.csv("icu.csv")
+m1 = glm(sta ~ age + can + cpr + inf + factor(race), family = binomial, data = icu)
+summary(m1)
+# a.
+# LRT
+m0 = glm(sta ~ age + can + factor(race), family = binomial, data = icu)
+anova(m0, m1)
+1-pchisq(12.845, 2) 
+# Wald
+library(aod)
+wald.test(b = coef(m1), Sigma = vcov(m1), Terms = c(4,5))
+
+# b.
+# LRT
+x = model.matrix(m1)[,-1]
+newdat = data.frame(sta =m1$y, x)
+m00 = glm(sta ~ age + can + cpr + inf + I(factor.race.2 + factor.race.3), family = binomial, data=newdat)
+anova(m00, m1)
+1-pchisq(0.96205, 1) 
+# Wald
+lc = cbind(0,0,0, 0, 0, 1, -1)
+wald.test(b = coef(m1), Sigma = vcov(m1), L = lc)
+
+# c.
+vcov(m1)
+summary(m1)
+v = 0.2054273885 + 0.2412413604 - 2*0.0945459565
+sqrt(v)
+(0.91630 - 0.42271) + c(-1, 1)*1.96*(0.5075203)
+```
