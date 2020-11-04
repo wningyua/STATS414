@@ -1,0 +1,81 @@
+---
+title: "Quiz2"
+author: "Ningyuan Wang"
+date: "10/20/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(nlme)
+data(cars)
+```
+
+### 1.
+a. 
+The residuals does not sum to zero, but the weighted residuals sum to zero. 
+b. 
+Based on the result of F-test, since p<0.05, reject H0 (i.e. weighted reduced model with only the intercept). According to the ANOVA table, SST is 97.019, SSR is 69.028, and SSE is 27.990, so SSE + SSR = SST. The codes for SST and SSR confirm the above results. 
+```{r }
+# a.
+m1 = gls(dist ~ speed, data = cars, weight = varConstPower(1, form=~speed))
+summary(m1)
+sum(resid(m1)) # 20.46435, ???is different if 0.76^2*48
+myweights = (3.1604+cars$speed^1.0224)^(-2)
+sum(myweights*resid(m1)) # 4.878433e-06
+# b.
+m2 = lm(dist ~ speed, data = cars, weight = myweights)
+m0 = lm(dist ~ 1, data = cars, weight = myweights)
+anova(m0, m2)
+# SST, SSR, SSE
+y_bar = coef(m0) # 28.60139
+sst = sum(myweights*((cars$dist - y_bar)^2)) # 97.01857
+ssr = sum(myweights*((fitted(m1) - y_bar)^2)) # 69.02904
+```
+
+### 2.
+a. 
+The model result shows below.
+b. 
+They results of the parameter estimates and standard errors calculated based on the Fisher scoring algorithm is same to the model results.
+```{r, include = FALSE}
+acc <- c(188,107,63,23,241,92,61,19,200,118,22,19,21,13,11,1,31,11,5,0,26,17,2,6)
+trav <- c(204433874,177250749,41949294,29883757,128647023,59822202,17642351,6838521,31765363,59730974,1289058,3775431,23163210,21162524,9473358,3474259,15040022,5529527,2400560,459525,3207263,4951688,224036,340844)
+truck <- gl(2,12)
+road <- gl(3,4,length=24)
+time <- gl(2,2,length=24)
+area <- gl(2,1,length=24)
+logtrav <- log(trav)
+dataf <- data.frame(truck=truck,road=road,time=time,area=area,acc=acc,trav=trav,logtrav=logtrav)
+```
+
+```{r}
+m3 <- glm(acc ~ truck + road + time + area + road*time + road*area,family=poisson, offset=logtrav, data=dataf)
+summary(m3)
+```
+
+b.
+```{r}
+obsrate = acc/trav
+acc1 = ifelse(acc==0, 0.5,acc)
+obsrate1  = acc1/trav
+mu = obsrate1
+eta = log(mu)
+z = eta
+w = acc1
+
+for (i in 1:5){
+  mod = lm(z ~ truck + road + time + area + road*time + road*area,
+           weights = w)
+  eta = fitted(mod)
+  mu = exp(eta)
+  z = eta + (obsrate - mu)/mu
+  w = trav*mu
+}
+coef(mod)
+varbeta = summary(mod)$cov.unscaled
+sqrt(diag(varbeta))
+  
+```
+
+
