@@ -1,0 +1,79 @@
+---
+title: "414HW6"
+author: "Ningyuan Wang"
+date: "11/3/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1.
+```{r, include=FALSE}
+library(survival)
+subj <- gl(1600,2)
+srvy <- rep(c(0,1),1600)
+appdapp <- c(rep(c(1,1),794),rep(c(1,0),150),rep(c(0,1),86),rep(c(0,0),570))
+```
+
+a. 
+The odds ratio that compares the odds of approval on the second survey to the odds of approval on the first survey is 0.5733, and the 95% CI is (0.4398, 0.7474). The value of the likelihood ratio test is 17.58 on 1 df, and p-value of the test is p=0. Reject Ho. WIth 95% confidence, the odds ratio taht comapres the odds of approcal on the second survey to the odds of approval on the first survey locates in the interval of 0.4398 and 0.7474.
+
+Recall the value of McNemar's test statistic is 17.4 on 1 df. The Score(logrank) Test statistic is 17.36 on 1 df. The two statistic are pretty close to each other. 
+```{r}
+m1 = clogit(appdapp ~ strata(subj) + srvy)
+summary(m1)
+```
+
+b.
+Please check the hand-written part. The results match to the results in (a).
+
+### 2.
+a. 
+Please check the hand-written part. 
+
+b.
+The odds ratio of MI that compares those with diabetes to those without diabetes is 2.313. 95% CI is (1.286，4.157). WIth 95% confidence, the odds ratio of MI that compares those with diabetes to those without diabetes is located in the interval between 1.286 and 4.157. 
+ 
+```{r}
+pairs = rep(c(1:144), each = 2)
+y = rep(c(1,0), times = 72)
+x = c(rep(c(1, 1), 9),
+      rep(c(1, 0), 37),
+      rep(c(0, 1), 16),
+      rep(c(0, 0), 82))
+newdf = data.frame(pairs, y, x)
+m2 = clogit(y ~ strata(pairs) + x, data = newdf)
+summary(m2)
+```
+
+c.
+The statistic is 8.551263, and it matches the likelihood ratio statistic produced in the model of part b. 
+```{r}
+l_beta = 37*0.8383- (16+37)* log(2.3125+1)
+l0 = -(16+37)* log(2)
+2*(l_beta-l0) #  4.749658e-05
+```
+
+d.
+The score statistic is 8.320755, and it matches to the score(logrank) statistic in the model. 
+```{r}
+d2 = (37 - (16+37)/2)^2
+I = (16+37)/4
+d2/I
+```
+
+e.
+Compared to the model in part b, the estmation, standard error and the Wald test are the same. The deviance difference between null deviance and residual deviance is equal to the likelihood ratio test statistic in the part b. 
+```{r}
+index = 1:144*2
+newdata = newdf[index-1,] - newdf[index,]
+mod = glm(y ~ -1 + x, family = binomial, data = newdata)
+summary(mod)
+```
+
+
+
+
+
