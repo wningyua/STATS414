@@ -1,0 +1,95 @@
+---
+title: "414Quiz3"
+author: "Ningyuan Wang"
+date: "11/10/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1.
+a. 
+The mean of the samples is 0.9993, the standard deviation of the samples is 1.0189. The theoretical mean and standard deviation are both 1. The results are close to the theoretical values. 
+
+b. 
+The plot for Markov chain sampler indicates some correlation because the draws are not independent. The other plot does not show any correlation because draws are independent. 
+```{r}
+#a.
+J = 1200
+y = rep(0, J)
+x = rep(0, J)
+x[1] = 1
+y[1] = 0.3
+# run 1200 iterations
+set.seed(135)
+for (i in 1:(J-1)){
+  y[i+1] = runif(1, 0, exp(-x[i]))
+  x[i+1] = runif(1, 0, -log(y[i+1]))
+}
+
+# discard initial 200 for burnin
+xnew = x[201:1200]
+mean(xnew)
+sd(xnew)
+hist(xnew, freq=F, col='lightblue')
+ts.plot(xnew, main="Time Series Plot for X")
+#plot(density(xnew), xlim = c(0, 8), main = "Kernal Density Plot for X")
+
+#b.
+acf(xnew, "correlation")
+set.seed(135)
+samp = rexp(1000)
+acf(samp, "correlation")
+```
+
+### 2.
+a.
+The estimate of alpha is -0.7597, the standard error of alpha is 0.1427. The estimate of beta is 5.6922, the standard error of beta is 0.5366. G^2 = 4.6415 on 4 df. Because p-value is 0.3260973>0.05. Reject Ho at alpha = 0.05. Therefore, this is a good fit. 
+
+b. 
+The mean of samples is 0.1345173, and the standard error of samples is 0.02166359.
+
+c.
+The estimate of alpha is -0.7688, the standard error of alpha is 0.1427. The estimate of beta is 5.766, the standard error of beta is 0.5414. The results are very close to the results in part a. 
+
+d.
+The posterior mean is 0.1334 and the posterior standard error is 0.02171. The results are very close to the results in part b.
+
+e.
+With delta method, the estimate of standard error is 0.02178673, the value is very close to the results in b and d. 
+
+```{r}
+#a.  
+y = c(2, 19, 24, 49, 69, 78)
+n = rep(80, 6)
+x = c(-0.553, -0.113, 0.059, 0.185, 0.446, 0.753)
+slogit = log((y + 0.5)/(n - y + 0.5))
+plot(x, slogit)
+
+ymat = cbind(y, n-y)
+m1 = glm(ymat~x, family = binomial)
+summary(m1)
+pchisq(4.6415, 4, lower.tail = F)
+
+#b.
+phat = fitted.values(m1)
+nmat = matrix(0, nrow=2, ncol=1000)
+for(i in 1:1000){
+  ynew = rbinom(6, n, phat)
+  ymatnew = cbind(ynew, n-ynew)
+  m2 = glm(ymatnew~x, family=binomial)
+  nmat[,i] = m2$coef
+}
+LD50samp = -nmat[1,]/nmat[2,]
+sd(LD50samp)
+mean(LD50samp)
+hist(LD50samp)
+
+#e.
+B = c(-1/m1$coef[2], m1$coef[1]/m1$coef[2]^2)
+sqrt(B %*% vcov(m1) %*% B)
+
+
+```
